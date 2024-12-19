@@ -12,6 +12,7 @@ import DeletePlacesModal from '../components/Planning/DeletePlacesModal';
 import { FaRegTrashCan } from "react-icons/fa6";
 import { TiDelete } from "react-icons/ti"; // X자 모양 아이콘
 import DeleteTripModal from '../components/Planning/DeleteTripModal';
+import OrderChangeModal from '../components/Planning/OrderChangeModal';
 
 const Planning = () => {
   const dispatch = useDispatch();
@@ -31,6 +32,26 @@ const Planning = () => {
   const [isDeleteTripModalOpen, setIsDeleteTripModalOpen] = useState(false);  // 여행 일정 삭제 모달 상태
   const [tripToDelete, setTripToDelete] = useState(null);  // 삭제할 여행 ID 저장
   const [placeToDelete, setPlaceToDelete] = useState(null);  // 삭제할 장소의 ID 저장
+
+  // 상태 추가
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+
+  const openOrderChangeModal = () => {
+    setIsOrderModalOpen(true);
+  };
+
+  const closeOrderChangeModal = () => {
+    setIsOrderModalOpen(false);
+  };
+
+  const handleSaveOrder = (newOrder) => {
+    console.log("New order from modal:", newOrder); // 모달에서 전달된 새로운 순서
+    dispatch(updateTripData({ ...tripData, selectedPlaces: newOrder })); // Redux 상태 업데이트
+  };
+
+  useEffect(() => {
+    console.log("Redux updated selectedPlaces:", selectedPlaces);
+  }, [selectedPlaces]);
 
   const [currentDay, setCurrentDay] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -198,6 +219,7 @@ const Planning = () => {
           {generateDays().map((day, dayIndex) => (
             <div key={dayIndex}>
               <h2>{day}</h2>
+              <AddPlaceButton onClick={openOrderChangeModal}>순서 변경</AddPlaceButton>
               <PlaceList>
               {isLoading ? (
                   // 로딩 중일 때 스켈레톤 표시
@@ -212,7 +234,8 @@ const Planning = () => {
                     .filter((place) => place.trip_day === dayIndex + 1)
                     .sort((a, b) => a.order_no - b.order_no) // order_no 순서로 정렬
                     .map((place, index) => (
-                      <PlaceContainer key={place.trip_plan_detail_id}>
+                      <PlaceContainer 
+                        key={place.trip_plan_detail_id}>
                             <OrderNumber>{place.order_no || index + 1}</OrderNumber>
                             <PlaceItem>
                           <PlaceContent>{place.place_name}</PlaceContent>
@@ -265,6 +288,14 @@ const Planning = () => {
         isOpen={isDeletePlaceModalOpen}
         onClose={handleCancelDeletePlace}
         onConfirm={handleConfirmDeletePlace}
+      />
+      
+      {/* 장소 순서 변경 모달 */}
+      <OrderChangeModal
+        places={selectedPlaces}
+        isOpen={isOrderModalOpen}
+        onClose={closeOrderChangeModal}
+        onSave={handleSaveOrder}
       />
     </Container>
   );
@@ -431,7 +462,8 @@ const InviteButton = styled.button`
 `;
 
 const AddPlaceButton = styled.button`
-  margin-top: 40px;
+  margin-top: 12px;
+  margin-bottom: 12px;
   padding: 8px 16px;
   background-color: #507dbc;
   color: white;
@@ -525,3 +557,4 @@ const ResultInfo = styled.div`
   flex-direction: column;
   gap: 6px;
 `;
+
